@@ -100,9 +100,11 @@ exports.registerUser = async (req, res) => {
         licenseNumber,
         qualifications: qualifications || [],
         experience: experience || 0,
-        bio: bio || '',
+        bio: bio || "",
         consultationFee: consultationFee || 0,
-        isVerified: false, // Requires admin verification
+        // For this project, mark doctors as verified automatically
+        // so we don't require a separate admin verification UI.
+        isVerified: true,
       });
 
       await doctor.save();

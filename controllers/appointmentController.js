@@ -16,16 +16,10 @@ exports.bookAppointment = async (req, res) => {
       });
     }
     
-    // Check if doctor exists and is verified
+    // Check if doctor exists
     const doctor = await Doctor.findById(doctorId).populate('userId');
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
-    }
-    
-    if (!doctor.isVerified) {
-      return res.status(400).json({ 
-        message: "Cannot book appointment with unverified doctor. Please wait for admin verification." 
-      });
     }
     
     // Check if patient is trying to book with themselves

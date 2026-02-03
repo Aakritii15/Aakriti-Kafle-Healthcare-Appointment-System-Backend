@@ -6,15 +6,11 @@ const Appointment = require("../models/Appointment");
 // Search doctors
 exports.searchDoctors = async (req, res) => {
   try {
-    const { specialization, name, verified } = req.query;
+    const { specialization, name } = req.query;
     
     // Build query
+    // For this project, return all doctors (no admin verification filter)
     let query = {};
-    
-    // Only show verified doctors by default (unless explicitly requested)
-    if (verified !== 'false') {
-      query.isVerified = true;
-    }
     
     // Search by specialization
     if (specialization) {
