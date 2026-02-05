@@ -1,7 +1,6 @@
-// Debug controller to help troubleshoot login issues
 const User = require("../models/User");
 
-// Check if user exists (for debugging only - remove in production)
+// Check if user exists (for debugging )
 exports.checkUser = async (req, res) => {
   try {
     const { email } = req.query;

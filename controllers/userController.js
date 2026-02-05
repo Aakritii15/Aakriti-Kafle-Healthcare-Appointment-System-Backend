@@ -4,7 +4,7 @@ const Doctor = require("../models/Doctor");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-// Register User (Patient, Doctor, Moderator)
+// Register User (Patient, Doctor, Admin)
 exports.registerUser = async (req, res) => {
   try {
     console.log("[REGISTER] Registration attempt:", { email: req.body.email, role: req.body.role });
@@ -24,10 +24,10 @@ exports.registerUser = async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ['patient', 'doctor', 'admin', 'moderator'];
+    const validRoles = ['patient', 'doctor', 'admin'];
     if (!validRoles.includes(role)) {
       console.log("[REGISTER] Invalid role:", role);
-      return res.status(400).json({ message: "Invalid role. Must be: patient, doctor, admin, or moderator" });
+      return res.status(400).json({ message: "Invalid role. Must be: patient, doctor, or admin" });
     }
 
     // Only allow admin creation by existing admins (for security)

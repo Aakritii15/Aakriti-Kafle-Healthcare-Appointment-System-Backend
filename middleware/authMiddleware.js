@@ -58,21 +58,10 @@ const patientMiddleware = (req, res, next) => {
   roleMiddleware('patient')(req, res, next);
 };
 
-const moderatorMiddleware = (req, res, next) => {
-  roleMiddleware('moderator')(req, res, next);
-};
-
-// Admin or Moderator middleware
-const adminOrModeratorMiddleware = (req, res, next) => {
-  roleMiddleware('admin', 'moderator')(req, res, next);
-};
-
 module.exports = { 
   authMiddleware,
   roleMiddleware,
   adminMiddleware,
   doctorMiddleware,
   patientMiddleware,
-  moderatorMiddleware,
-  adminOrModeratorMiddleware
 };
