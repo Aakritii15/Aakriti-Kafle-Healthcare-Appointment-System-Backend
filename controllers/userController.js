@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Doctor = require("../models/Doctor");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const ensureAdmin = require("../utils/ensureAdmin");
 
 // Register User (Patient, Doctor, Admin)
 exports.registerUser = async (req, res) => {
@@ -30,23 +31,11 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid role. Must be: patient, doctor, or admin" });
     }
 
-    // Only allow admin creation by existing admins (for security)
-    if (role === 'admin') {
-      // Check if admin token is provided
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(403).json({ message: "Admin registration requires admin privileges" });
-      }
-      const token = authHeader.split(" ")[1];
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const adminUser = await User.findById(decoded.id);
-        if (!adminUser || adminUser.role !== 'admin') {
-          return res.status(403).json({ message: "Only admins can create admin accounts" });
-        }
-      } catch (err) {
-        return res.status(403).json({ message: "Invalid admin token" });
-      }
+    // Admin accounts cannot be registered from UI
+    if (role === "admin") {
+      return res
+        .status(403)
+        .json({ message: "Admin registration is disabled. Contact system owner." });
     }
 
     // Normalize email
@@ -155,6 +144,17 @@ exports.loginUser = async (req, res) => {
     // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
     console.log(`[LOGIN] Attempting login for email: ${normalizedEmail}`);
+
+    // If admin email matches .env and user not found, ensure admin exists
+    if (!await User.findOne({ email: normalizedEmail }) && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+      if (normalizedEmail === process.env.ADMIN_EMAIL.toLowerCase().trim()) {
+        try {
+          await ensureAdmin();
+        } catch (seedErr) {
+          console.error("[LOGIN] Admin seed failed:", seedErr.message);
+        }
+      }
+    }
 
     // Find user by email (case-insensitive)
     const user = await User.findOne({ email: normalizedEmail });

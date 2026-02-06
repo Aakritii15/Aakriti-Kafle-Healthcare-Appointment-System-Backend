@@ -6,10 +6,13 @@ const userRoutes = require("./routes/user");
 const patientRoutes = require("./routes/patient");
 const doctorRoutes = require("./routes/doctor");
 const appointmentRoutes = require("./routes/appointment");
+const ensureAdmin = require("./utils/ensureAdmin");
 require("dotenv").config();
 
 // Connect to MongoDB
 connectDB();
+// Ensure admin exists (from .env)
+ensureAdmin().catch((err) => console.error("[ADMIN] Seed error:", err));
 
 // Middleware
 app.use(cors({
