@@ -6,6 +6,7 @@ const userRoutes = require("./routes/user");
 const patientRoutes = require("./routes/patient");
 const doctorRoutes = require("./routes/doctor");
 const appointmentRoutes = require("./routes/appointment");
+const adminRoutes = require("./routes/admin"); // Import admin routes
 const ensureAdmin = require("./utils/ensureAdmin");
 require("dotenv").config();
 
@@ -26,6 +27,7 @@ app.use("/users", userRoutes);
 app.use("/patients", patientRoutes);
 app.use("/doctors", doctorRoutes);
 app.use("/appointments", appointmentRoutes);
+app.use("/api/admin", adminRoutes); // Mount admin routes
 
 // Health check route
 app.get("/health", (req, res) => {

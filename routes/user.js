@@ -1,4 +1,3 @@
-// backend/routes/user.js
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
@@ -8,6 +7,8 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 // Public routes
 router.post("/register", userController.registerUser);
 router.post("/login", userController.loginUser);
+router.post("/forgot-password", userController.forgotPassword);
+router.post("/reset-password", userController.resetPassword);
 
 // Debug routes (remove in production)
 router.get("/debug/check", debugController.checkUser);

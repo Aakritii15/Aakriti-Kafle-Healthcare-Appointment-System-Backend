@@ -1,4 +1,5 @@
 // backend/controllers/userController.js
+const crypto = require("crypto");
 const User = require("../models/User");
 const Doctor = require("../models/Doctor");
 const bcrypt = require("bcrypt");
@@ -91,9 +92,7 @@ exports.registerUser = async (req, res) => {
         experience: experience || 0,
         bio: bio || "",
         consultationFee: consultationFee || 0,
-        // For this project, mark doctors as verified automatically
-        // so we don't require a separate admin verification UI.
-        isVerified: true,
+        isVerified: false, // Admin verifies in Doctor Verification panel
       });
 
       await doctor.save();
@@ -234,6 +233,57 @@ exports.getProfile = async (req, res) => {
       user,
       doctorInfo
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Forgot password – send reset token (no email service; token returned for dev)
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return res.json({ message: "If an account exists with this email, you will receive a password reset link." });
+    }
+    const token = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    user.updatedAt = new Date();
+    await user.save();
+    const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${token}`;
+    res.json({ message: "If an account exists with this email, you will receive a password reset link.", resetLink });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Reset password – use token from email/link
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset link. Please request a new one." });
+    }
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    user.updatedAt = new Date();
+    await user.save();
+    res.json({ message: "Password reset successfully. You can now login." });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

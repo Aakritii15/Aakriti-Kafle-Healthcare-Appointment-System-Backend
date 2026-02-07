@@ -1,10 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
-/**
- * Ensures a single admin user exists (created from .env).
- * Admin cannot be registered from UI.
- */
+
 async function ensureAdmin() {
   const email = (process.env.ADMIN_EMAIL || "").toLowerCase().trim();
   const password = process.env.ADMIN_PASSWORD || "";

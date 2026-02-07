@@ -1,4 +1,3 @@
-// backend/controllers/appointmentController.js
 const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
@@ -6,7 +5,7 @@ const User = require("../models/User");
 // Book appointment
 exports.bookAppointment = async (req, res) => {
   try {
-    const { doctorId, appointmentDate, appointmentTime, reason, notes } = req.body;
+    const { doctorId, appointmentDate, appointmentTime, reason, notes, isEmergency } = req.body;
     const patientId = req.user.id;
     
     // Validate required fields
@@ -77,6 +76,7 @@ exports.bookAppointment = async (req, res) => {
       appointmentTime: appointmentTime,
       reason: reason,
       notes: notes || '',
+      isEmergency: !!isEmergency,
       consultationFee: doctor.consultationFee,
       status: 'pending'
     });

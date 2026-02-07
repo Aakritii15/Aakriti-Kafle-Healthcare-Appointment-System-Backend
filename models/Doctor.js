@@ -1,23 +1,22 @@
-// backend/models/Doctor.js
 const mongoose = require("mongoose");
 
 const doctorSchema = new mongoose.Schema({
-  userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
-    unique: true 
+    unique: true
   },
   specialization: { type: String, required: true },
   licenseNumber: { type: String, required: true, unique: true },
   qualifications: [{ type: String }],
   experience: { type: Number, default: 0 }, // years of experience
   bio: { type: String },
-  consultationFee: { type: Number, default: 0 },
+  consultationFee: { type: Number, default: 0, min: 500 },
   isVerified: { type: Boolean, default: false }, // Admin verification
-  verifiedBy: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User' 
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
   verifiedAt: { type: Date },
   availability: {

@@ -1,4 +1,3 @@
-// backend/controllers/doctorController.js
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
 const Appointment = require("../models/Appointment");
@@ -8,9 +7,8 @@ exports.searchDoctors = async (req, res) => {
   try {
     const { specialization, name } = req.query;
     
-    // Build query
-    // For this project, return all doctors (no admin verification filter)
-    let query = {};
+    // Build query: only show admin-approved (verified) doctors to patients
+    let query = { isVerified: true };
     
     // Search by specialization
     if (specialization) {
@@ -56,7 +54,7 @@ exports.searchDoctors = async (req, res) => {
   }
 };
 
-// Get doctor details by ID
+// Get doctor details by ID (only verified doctors are visible to patients for booking)
 exports.getDoctorById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -66,6 +64,10 @@ exports.getDoctorById = async (req, res) => {
       .populate('verifiedBy', 'username');
     
     if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+    // Rejected/unverified doctors must not be bookable
+    if (!doctor.isVerified) {
       return res.status(404).json({ message: "Doctor not found" });
     }
     

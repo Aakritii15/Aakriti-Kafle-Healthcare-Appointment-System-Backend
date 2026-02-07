@@ -1,4 +1,3 @@
-// backend/models/User.js
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
@@ -15,6 +14,8 @@ const userSchema = new mongoose.Schema({
   address: { type: String },
   dateOfBirth: { type: Date },
   isActive: { type: Boolean, default: true },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

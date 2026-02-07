@@ -1,4 +1,3 @@
-// backend/models/Appointment.js
 const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema({
@@ -41,6 +40,10 @@ const appointmentSchema = new mongoose.Schema({
   notes: {
     type: String
   },
+  isEmergency: {
+    type: Boolean,
+    default: false
+  },
   cancelledBy: {
     type: String,
     enum: ['patient', 'doctor', 'admin']
@@ -62,5 +65,6 @@ const appointmentSchema = new mongoose.Schema({
 appointmentSchema.index({ patientId: 1, appointmentDate: 1 });
 appointmentSchema.index({ doctorId: 1, appointmentDate: 1 });
 appointmentSchema.index({ status: 1 });
+appointmentSchema.index({ isEmergency: 1 });
 
 module.exports = mongoose.model("Appointment", appointmentSchema);
