@@ -6,13 +6,10 @@ const Appointment = require("../models/Appointment");
 exports.getPendingDoctors = async (req, res) => {
     try {
         const doctors = await Doctor.find({ isVerified: false })
-            .populate("userId", "username email -_id") // Populate name and email from User model
-            .select("-password"); // Exclude sensitive data if any leaks
+            .populate("userId", "username email -_id") 
+            .select("-password"); 
 
-        // Transform data to flatten structure for frontend convenience if needed, 
-        // or just return as is. Frontend expects: { username, email, specialization, ... }
-        // The populate puts user data inside `userId` object.
-        // Let's map it to match frontend expectation: "doc.username"
+      
 
         const formattedDoctors = doctors.map(doc => ({
             _id: doc._id,
@@ -52,28 +49,7 @@ exports.verifyDoctor = async (req, res) => {
             await doctor.save();
             return res.json({ message: "Doctor verified successfully" });
         } else if (status === "rejected") {
-            // Logic for rejection. 
-            // Option 1: Delete the doctor profile? 
-            // Option 2: Just keep isVerified = false (no change) but maybe notify?
-            // For now, let's just keep it simple: strict verification required.
-            // If rejected, we might want to delete the user or doctor profile so they can register again or fix data.
-            // Given the prompt didn't specify rejection logic, I'll assume "Delete" or "Do nothing".
-            // Let's assume we just leave them unverified for now, or maybe deleted.
-            // The frontend shows "Reject" button.
-
-            // Let's DELETE the doctor profile if rejected, so they are removed from the list?
-            // Or just return success without changing verify status (so they stay pending)?
-            // The frontend removes them from the list locally: `setDoctors((prev) => prev.filter((doc) => doc._id !== id));`
-            // So if I don't change anything, next time they will reappear.
-            // User said "I only need registered doctors to appear there for approval".
-
-            // Let's go with: Rejection -> Delete Doctor Profile (and maybe User?)
-            // For safety, let's just LEAVE them as unverified but maybe mark them?
-            // Actually, if we just want them to NOT appear, we must verify or delete.
-
-            // DECISION: For now, I will just set isVerified=false (default). 
-            // If the user wants to "Reject" and remove, maybe I should delete.
-            // I'll stick to updating `isVerified = false` (idempotent) for now.
+            
 
             doctor.isVerified = false;
             await doctor.save();
@@ -88,10 +64,10 @@ exports.verifyDoctor = async (req, res) => {
     }
 };
 
-// Get all users (admin: manage accounts)
+// Get all users 
 exports.getAllUsers = async (req, res) => {
     try {
-        const { role } = req.query; // optional: patient, doctor, admin
+        const { role } = req.query; 
         const filter = {};
         if (role) filter.role = role;
         const users = await User.find(filter)
@@ -127,7 +103,7 @@ exports.updateUserStatus = async (req, res) => {
     }
 };
 
-// Get emergency cases (appointments marked as emergency)
+// Get emergency cases 
 exports.getEmergencyCases = async (req, res) => {
     try {
         const appointments = await Appointment.find({ isEmergency: true })

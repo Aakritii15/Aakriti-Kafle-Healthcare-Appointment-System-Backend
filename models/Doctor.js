@@ -28,6 +28,11 @@ const doctorSchema = new mongoose.Schema({
     saturday: [{ start: String, end: String }],
     sunday: [{ start: String, end: String }],
   },
+  status: {
+    type: String,
+    enum: ['Available', 'Busy', 'On Leave'],
+    default: 'Available'
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

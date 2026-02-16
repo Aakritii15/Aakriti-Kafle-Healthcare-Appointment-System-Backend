@@ -10,6 +10,9 @@ router.use(authMiddleware);
 // Book appointment (patient only)
 router.post("/book", appointmentController.bookAppointment);
 
+// Get booked slots
+router.get("/booked-slots", appointmentController.getBookedSlots);
+
 // Get patient appointments
 router.get("/my", appointmentController.getPatientAppointments);
 

@@ -7,52 +7,52 @@ exports.bookAppointment = async (req, res) => {
   try {
     const { doctorId, appointmentDate, appointmentTime, reason, notes, isEmergency } = req.body;
     const patientId = req.user.id;
-    
+
     // Validate required fields
     if (!doctorId || !appointmentDate || !appointmentTime || !reason) {
-      return res.status(400).json({ 
-        message: "Doctor ID, appointment date, time, and reason are required" 
+      return res.status(400).json({
+        message: "Doctor ID, appointment date, time, and reason are required"
       });
     }
-    
+
     // Check if doctor exists
     const doctor = await Doctor.findById(doctorId).populate('userId');
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
-    
+
     // Check if patient is trying to book with themselves
     if (doctor.userId._id.toString() === patientId) {
-      return res.status(400).json({ 
-        message: "Cannot book appointment with yourself" 
+      return res.status(400).json({
+        message: "Cannot book appointment with yourself"
       });
     }
-    
+
     // Check if appointment date is in the future
     const appointmentDateTime = new Date(`${appointmentDate}T${appointmentTime}`);
     if (appointmentDateTime < new Date()) {
-      return res.status(400).json({ 
-        message: "Appointment date and time must be in the future" 
+      return res.status(400).json({
+        message: "Appointment date and time must be in the future"
       });
     }
-    
-    // Check for conflicting appointments (same doctor, same date and time)
+
+    // Check for conflicting appointments 
     const appointmentDateObj = new Date(appointmentDate);
     appointmentDateObj.setHours(0, 0, 0, 0);
-    
+
     const conflictingAppointment = await Appointment.findOne({
       doctorId: doctor.userId._id,
       appointmentDate: appointmentDateObj,
       appointmentTime: appointmentTime,
       status: { $in: ['pending', 'confirmed'] }
     });
-    
+
     if (conflictingAppointment) {
-      return res.status(400).json({ 
-        message: "This time slot is already booked. Please choose another time." 
+      return res.status(400).json({
+        message: "This time slot is already booked. Please choose another time."
       });
     }
-    
+
     // Check if patient already has an appointment at this time
     const patientConflict = await Appointment.findOne({
       patientId: patientId,
@@ -60,13 +60,13 @@ exports.bookAppointment = async (req, res) => {
       appointmentTime: appointmentTime,
       status: { $in: ['pending', 'confirmed'] }
     });
-    
+
     if (patientConflict) {
-      return res.status(400).json({ 
-        message: "You already have an appointment at this time." 
+      return res.status(400).json({
+        message: "You already have an appointment at this time."
       });
     }
-    
+
     // Create appointment
     const appointment = new Appointment({
       patientId: patientId,
@@ -80,13 +80,13 @@ exports.bookAppointment = async (req, res) => {
       consultationFee: doctor.consultationFee,
       status: 'pending'
     });
-    
+
     await appointment.save();
-    
-    // Populate for response
+
+    // for response
     await appointment.populate('doctorId', 'username email');
     await appointment.populate('patientId', 'username email');
-    
+
     res.status(201).json({
       message: "Appointment booked successfully",
       appointment: {
@@ -115,12 +115,12 @@ exports.bookAppointment = async (req, res) => {
 exports.getPatientAppointments = async (req, res) => {
   try {
     const patientId = req.user.id;
-    
+
     const appointments = await Appointment.find({ patientId: patientId })
       .populate('doctorId', 'username email phone')
       .populate('doctorProfileId', 'specialization consultationFee')
       .sort({ appointmentDate: -1, appointmentTime: -1 });
-    
+
     res.json({
       count: appointments.length,
       appointments: appointments.map(apt => ({
@@ -153,52 +153,52 @@ exports.cancelAppointment = async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     const { cancellationReason } = req.body;
-    
+
     const appointment = await Appointment.findById(id)
       .populate('patientId', 'username')
       .populate('doctorId', 'username');
-    
+
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }
-    
+
     // Check if user has permission to cancel
     const isPatient = appointment.patientId._id.toString() === userId;
     const isDoctor = appointment.doctorId._id.toString() === userId;
     const isAdmin = userRole === 'admin';
-    
+
     if (!isPatient && !isDoctor && !isAdmin) {
-      return res.status(403).json({ 
-        message: "You don't have permission to cancel this appointment" 
+      return res.status(403).json({
+        message: "You don't have permission to cancel this appointment"
       });
     }
-    
+
     // Check if appointment can be cancelled
     if (appointment.status === 'cancelled') {
-      return res.status(400).json({ 
-        message: "Appointment is already cancelled" 
+      return res.status(400).json({
+        message: "Appointment is already cancelled"
       });
     }
-    
+
     if (appointment.status === 'completed') {
-      return res.status(400).json({ 
-        message: "Cannot cancel a completed appointment" 
+      return res.status(400).json({
+        message: "Cannot cancel a completed appointment"
       });
     }
-    
+
     // Determine who cancelled
     let cancelledBy = 'patient';
     if (isDoctor) cancelledBy = 'doctor';
     if (isAdmin) cancelledBy = 'admin';
-    
+
     // Update appointment
     appointment.status = 'cancelled';
     appointment.cancelledBy = cancelledBy;
     appointment.cancellationReason = cancellationReason || 'No reason provided';
     appointment.updatedAt = new Date();
-    
+
     await appointment.save();
-    
+
     res.json({
       message: "Appointment cancelled successfully",
       appointment: {
@@ -219,27 +219,27 @@ exports.getAppointmentById = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
     const userRole = req.user.role;
-    
+
     const appointment = await Appointment.findById(id)
       .populate('patientId', 'username email phone')
       .populate('doctorId', 'username email phone')
       .populate('doctorProfileId', 'specialization consultationFee');
-    
+
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }
-    
+
     // Check if user has permission to view
     const isPatient = appointment.patientId._id.toString() === userId;
     const isDoctor = appointment.doctorId._id.toString() === userId;
     const isAdmin = userRole === 'admin';
-    
+
     if (!isPatient && !isDoctor && !isAdmin) {
-      return res.status(403).json({ 
-        message: "You don't have permission to view this appointment" 
+      return res.status(403).json({
+        message: "You don't have permission to view this appointment"
       });
     }
-    
+
     res.json({
       id: appointment._id,
       patient: {
@@ -266,6 +266,37 @@ exports.getAppointmentById = async (req, res) => {
       createdAt: appointment.createdAt,
       updatedAt: appointment.updatedAt
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get booked time slots
+exports.getBookedSlots = async (req, res) => {
+  try {
+    const { doctorId, date } = req.query;
+
+    if (!doctorId || !date) {
+      return res.status(400).json({ message: "Doctor ID and date are required" });
+    }
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const appointments = await Appointment.find({
+      doctorId,
+      appointmentDate: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      },
+      status: { $in: ['pending', 'confirmed'] }
+    }).select('appointmentTime');
+
+    const bookedSlots = appointments.map(app => app.appointmentTime);
+    res.json(bookedSlots);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
