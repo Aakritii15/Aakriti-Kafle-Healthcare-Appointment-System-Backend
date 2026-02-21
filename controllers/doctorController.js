@@ -108,7 +108,7 @@ exports.getDoctorAppointments = async (req, res) => {
     }
 
     const appointments = await Appointment.find({ doctorId: doctorId })
-      .populate('patientId', 'username email phone')
+      .populate('patientId', 'username email phone address')
       .sort({ appointmentDate: 1, appointmentTime: 1 });
 
     res.json({
